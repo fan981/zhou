@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七彩无重复闪烁灯</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #000;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .title {
+            color: #fff;
+            font-size: 3em;
+            margin: 30px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .light-container {
+            display: flex;
+            gap: 50px;
+            background: #1a1a1a;
+            padding: 50px;
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 
+                        inset 0 0 25px rgba(255, 255, 255, 0.03);
+        }
+
+        .light {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 0 30px rgba(0, 0, 0, 0.6),
+                0 0 40px rgba(0, 0, 0, 0.9);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .button-group {
+            margin-top: 60px;
+            display: flex;
+            gap: 40px;
+        }
+
+        .control-btn {
+            padding: 18px 50px;
+            font-size: 1.5em;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        #start-btn {
+            background: #00E676;
+            box-shadow: 0 0 20px #00E676;
+        }
+
+        #stop-btn {
+            background: #FF4081;
+            box-shadow: 0 0 20px #FF4081;
+        }
+
+        #start-btn:hover, #stop-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 35px rgba(0, 230, 118, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">严格七彩无重复闪烁</h1>
+    
+    <div class="light-container">
+        <div class="light" data-index="0"></div>
+        <div class="light" data-index="1"></div>
+        <div class="light" data-index="2"></div>
+        <div class="light" data-index="3"></div>
+        <div class="light" data-index="4"></div>
+        <div class="light" data-index="5"></div>
+        <div class="light" data-index="6"></div>
+    </div>
+
+    <div class="button-group">
+        <button id="start-btn">启动无重复闪烁</button>
+        <button id="stop-btn">停止动画</button>
+    </div>
+
+    <script>
+        // 修正后的七种有效颜色（确保亮度足够且互不相同）
+        const COLORS = [
+            '#FF3333', // 亮红
+            '#FFAA00', // 亮橙
+            '#FFFF33', // 亮黄
+            '#33FF33', // 亮绿
+            '#33FFFF', // 亮青
+            '#3333FF', // 亮蓝
+            '#CC33FF'  // 亮紫
+        ];
+        
+        const lights = document.querySelectorAll('.light');
+        let animationTimer;
+        let currentPermutation = [...COLORS]; // 当前颜色排列
+        let isAnimated = false;
+
+        // 生成颜色排列的下一个排列（循环右移）
+        function getNextPermutation() {
+            const firstColor = currentPermutation.shift();
+            currentPermutation.push(firstColor);
+            return [...currentPermutation];
+        }
+
+        // 初始化颜色排列
+        function initColors() {
+            lights.forEach((light, index) => {
+                light.style.backgroundColor = currentPermutation[index];
+                light.style.boxShadow = `
+                    inset 0 0 30px rgba(0,0,0,0.4),
+                    0 0 40px ${currentPermutation[index]}
+                `;
+            });
+        }
+
+        // 动画帧函数
+        function animateColors() {
+            if (!isAnimated) return;
+            
+            // 生成下一个颜色排列
+            currentPermutation = getNextPermutation();
+            // 应用新颜色
+            lights.forEach((light, index) => {
+                light.style.backgroundColor = currentPermutation[index];
+                light.style.boxShadow = `
+                    inset 0 0 30px rgba(0,0,0,0.4),
+                    0 0 40px ${currentPermutation[index]}
+                `;
+            });
+            
+            // 递归调用实现连续动画（每800ms切换一次）
+            animationTimer = setTimeout(() => {
+                requestAnimationFrame(animateColors);
+            }, 800);
+        }
+
+        // 启动动画
+        document.getElementById('start-btn').addEventListener('click', () => {
+            if (isAnimated) return;
+            
+            isAnimated = true;
+            initColors(); // 初始化颜色排列
+            animateColors(); // 开始动画
+        });
+
+        // 停止动画
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            isAnimated = false;
+            clearTimeout(animationTimer);
+            
+            // 恢复初始状态
+            lights.forEach(light => {
+                light.style.backgroundColor = '#1a1a1a';
+                light.style.boxShadow = `
+                    inset 0 0 30px rgba(0,0,0,0.6),
+                    0 0 40px rgba(0,0,0,0.9)
+                `;
+            });
+            currentPermutation = [...COLORS]; // 重置排列
+        });
+    </script>
+</body>
+</html>
